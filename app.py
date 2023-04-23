@@ -1,13 +1,10 @@
 import json
-from flask import Flask, request, jsonify, make_response, send_file, Response
+from flask import Flask, request, jsonify, make_response, send_file
 from flask_cors import CORS
 import sympy as sp
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt    
-from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
-from matplotlib.figure import Figure
-import numpy as np
 import io              
 
 app = Flask(__name__)
@@ -17,20 +14,11 @@ CORS(app)
 def index():
     return "FormuLister Solver API"
 
-def fig_response():
-    """Turn a matplotlib Figure into Flask response"""
-    fig = Figure()
-    axis = fig.add_subplot(1, 1, 1)
-    xs = np.random.rand(100)
-    ys = np.random.rand(100)
-    axis.plot(xs, ys)
-    output = io.BytesIO()
-    FigureCanvas(plt).print_png(output)
-    return Response(output.getvalue(), mimetype='image/png')
-
 @app.route("/render", methods=['POST'])
-def render():                   
-    buffer = io.BytesIO()                                 
+def render():                     
+    """Renders a formula. This takes in a request body and parses the equation
+    with sympy. Sympy converts the equation to latex where it gets plotted with matplotlib."""
+
     # Grab the body of the request
     req_body = json.loads(request.data)  
     equation_str = req_body['data']
@@ -42,16 +30,13 @@ def render():
 
     eq = sp.Eq(s1, s2)
 
-    lat = sp.latex(eq)                                                            
-                 
-    left, width = .25, .5
-    bottom, height = .25, .5                                           
+    lat = sp.latex(eq)                                                                                                                
 
     ax = plt.subplot()
 
     # Build a rectangle in axes coords
-    left, width = .25, .5
-    bottom, height = .25, .5
+    left, width = 0, 1
+    bottom, height = 0, 1
     right = left + width
     top = bottom + height
     p = plt.Rectangle((left, bottom), width, height, fill=False)
@@ -63,14 +48,14 @@ def render():
     ax.text(0.5 * (left + right), 0.5 * (bottom + top), r"$%s$" % lat,
             horizontalalignment='center',
             verticalalignment='center',
-            fontsize = 20,
+            fontsize = 50,
             transform=ax.transAxes)
 
     ax.set_axis_off()     
     
     # We dont wanna save the image to the server, so save it in a buffer
     buffer = io.BytesIO()
-    plt.savefig(buffer)                
+    plt.savefig(buffer,  bbox_inches='tight',pad_inches = 0, dpi = 50)                
 
     # Send the file to the client as a response
     response = send_file(buffer, mimetype='image/png')

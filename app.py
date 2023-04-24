@@ -39,11 +39,6 @@ def render():
     bottom, height = 0, 1
     right = left + width
     top = bottom + height
-    p = plt.Rectangle((left, bottom), width, height, fill=False)
-    p.set_transform(ax.transAxes)
-    p.set_clip_on(False)
-    ax.add_patch(p)
-
 
     ax.text(0.5 * (left + right), 0.5 * (bottom + top), r"$%s$" % lat,
             horizontalalignment='center',
@@ -55,6 +50,7 @@ def render():
     
     # We dont wanna save the image to the server, so save it in a buffer
     buffer = io.BytesIO()
+    ax.set_frame_on(False)  
     plt.savefig(buffer,  bbox_inches='tight',pad_inches = 0, dpi = 50)                
 
     # Send the file to the client as a response
@@ -69,7 +65,7 @@ def render():
 
 @app.route('/solve', methods=['POST'])
 def solve():
-    # Grab the body of the request
+    # Grab the body of the request    
     req_body = json.loads(request.data)  
     equation_str = req_body['data']
     

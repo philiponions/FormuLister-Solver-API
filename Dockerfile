@@ -5,6 +5,6 @@ RUN pip3 install -r requirements.txt
 
 COPY . .
 
-EXPOSE 5000
+EXPOSE 443
 
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "app:app"]
+CMD ["gunicorn", "--bind", "0.0.0.0:443", "app:app"]
